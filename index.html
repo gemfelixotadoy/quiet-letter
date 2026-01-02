@@ -271,13 +271,59 @@
     * {
       -webkit-tap-highlight-color: transparent;
     }
+
+    /* "Miss me" button + modal */
+    .miss-btn {
+      display: inline-block;
+      margin-top: 1rem;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.85);
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .message-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      backdrop-filter: blur(6px);
+    }
+    .message-modal.visible { display: flex; }
+    .message-panel {
+      background: rgba(0,0,0,0.92);
+      color: #fff;
+      border-radius: 8px;
+      padding: 1rem;
+      width: 92vw;
+      max-width: 420px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .message-panel input[type="text"], .message-panel textarea {
+      width: 100%;
+      padding: 0.6rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: transparent;
+      color: #fff;
+      resize: vertical;
+      margin-bottom: 0.6rem;
+    }
+    .message-actions { display:flex; gap:0.5rem; justify-content:flex-end; }
+    .message-actions button { padding:0.5rem 0.8rem; border-radius:6px; cursor:pointer; }
   </style>
 </head>
 <body>
 
   <!-- Password Screen -->
   <div class="password-screen" id="passwordScreen">
-    <p class="subtitle">for you ❤️</p>
+    <p class="subtitle">for you, analy ❤️</p>
     <h1 class="title">enter to read</h1>
     <p class="hint">hint: the endearment you always call me whenever we talk.</p>
     <form id="passwordForm">
@@ -292,6 +338,19 @@
       <br>
       <button type="submit" class="submit-btn">open</button>
     </form>
+    <button id="missBtn" class="miss-btn">Press here if you miss me</button>
+
+    <div id="messageModal" class="message-modal" aria-hidden="true">
+      <div class="message-panel" role="dialog" aria-modal="true" aria-labelledby="messageTitle">
+        <h3 id="messageTitle" style="margin:0 0 0.5rem 0; font-weight:300; letter-spacing:0.12em;">Send me a message</h3>
+        <input id="senderName" type="text" placeholder="Your name (optional)">
+        <textarea id="senderMessage" rows="5" placeholder="Write your message..." ></textarea>
+        <div class="message-actions">
+          <button id="sendMessageBtn">Send</button>
+          <button id="closeMessageBtn">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Letter Screen -->
@@ -305,11 +364,26 @@
     </div>
   </div>
 
+  <script src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
   <script>
     // Show alert on page open
     window.addEventListener('load', () => {
       alert("Want to talk? Message me. Anytime. Miss you.");
     });
+
+    // --- EmailJS setup ---
+    // Replace the placeholders below with your EmailJS Public Key (client-side),
+    // Service ID and Template ID. Create a template in EmailJS that accepts
+    // at least `message` and `from_name` fields.
+    // Note: EmailJS now exposes a Public Key instead of a `user_` id — use that.
+    const EMAILJS_PUBLIC_KEY = 'm3vUn90e568dH3eop';
+    const EMAILJS_SERVICE_ID = 'service_s20ldrn';
+    const EMAILJS_TEMPLATE_ID = 'template_7yx8gdr';
+    // Initialize with public key if available
+    if (EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+      try { emailjs.init(EMAILJS_PUBLIC_KEY); } catch (e) { console.warn('EmailJS init failed'); }
+    }
+
     // Configuration
     const PASSWORD = 'love'; // Change this to your password
     
@@ -430,6 +504,62 @@
       const dots = progressDots.querySelectorAll('.dot');
       dots.forEach(dot => dot.classList.remove('active'));
       setTimeout(() => showSentence(0), 500);
+    });
+
+    // --- Message button / modal behavior (EmailJS client send) ---
+    const missBtn = document.getElementById('missBtn');
+    const messageModal = document.getElementById('messageModal');
+    const closeMessageBtn = document.getElementById('closeMessageBtn');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    const senderName = document.getElementById('senderName');
+    const senderMessage = document.getElementById('senderMessage');
+
+    missBtn.addEventListener('click', () => {
+      messageModal.classList.add('visible');
+      messageModal.setAttribute('aria-hidden', 'false');
+      senderMessage.focus();
+    });
+
+    closeMessageBtn.addEventListener('click', () => {
+      messageModal.classList.remove('visible');
+      messageModal.setAttribute('aria-hidden', 'true');
+    });
+
+    sendMessageBtn.addEventListener('click', async () => {
+      const message = (senderMessage.value || '').trim();
+      const name = (senderName.value || '').trim() || 'Anonymous';
+      if (!message) { alert('Please write a message.'); senderMessage.focus(); return; }
+      // basic cooldown/disable
+      sendMessageBtn.disabled = true;
+      sendMessageBtn.textContent = 'Sending...';
+
+      try {
+        if (!EMAILJS_PUBLIC_KEY || EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
+          // EmailJS not configured client-side — fallback: open mailto with prefilled body
+          const subject = encodeURIComponent('Miss you message');
+          const body = encodeURIComponent(`From: ${name}\n\n${message}`);
+          window.location.href = `mailto:you@example.com?subject=${subject}&body=${body}`;
+        } else {
+          // If init was called above, the public key is already set; otherwise
+          // pass it as the fourth arg to `send`.
+          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            from_name: name,
+            message: message,
+            timestamp: new Date().toISOString()
+          }, EMAILJS_PUBLIC_KEY);
+          alert('Message sent — thank you.');
+        }
+        senderName.value = '';
+        senderMessage.value = '';
+        messageModal.classList.remove('visible');
+        messageModal.setAttribute('aria-hidden', 'true');
+      } catch (err) {
+        console.error('send error', err);
+        alert('Sorry — could not send message.');
+      } finally {
+        sendMessageBtn.disabled = false;
+        sendMessageBtn.textContent = 'Send';
+      }
     });
   </script>
 </body>
