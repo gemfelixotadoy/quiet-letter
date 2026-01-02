@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="site-version" content="1.0">
   <title>For You</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
   <style>
@@ -587,29 +586,6 @@
         sendMessageBtn.textContent = 'Send';
       }
     });
-
-    // --- Auto-open message when site version changes ---
-    (function checkSiteVersion() {
-      try {
-        const meta = document.querySelector('meta[name="site-version"]');
-        if (!meta) return;
-        const version = meta.getAttribute('content');
-        const seen = localStorage.getItem('siteVersionSeen');
-        if (version && version !== seen) {
-          // mark as seen
-          localStorage.setItem('siteVersionSeen', version);
-          // Prefill automated message and show modal so visitor can notify you
-          const autoText = 'This is an automated text from the website you have opened. The website has been updated.';
-          senderMessage.value = autoText;
-          // Optionally focus the send button so visitor can send quickly
-          messageModal.classList.add('visible');
-          messageModal.setAttribute('aria-hidden', 'false');
-          sendMessageBtn.focus();
-        }
-      } catch (e) {
-        console.warn('site version check failed', e);
-      }
-    })();
   </script>
 </body>
 </html>
