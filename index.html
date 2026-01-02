@@ -379,10 +379,43 @@
     const EMAILJS_PUBLIC_KEY = 'm3vUn90e568dH3eop';
     const EMAILJS_SERVICE_ID = 'service_s20ldrn';
     const EMAILJS_TEMPLATE_ID = 'template_7yx8gdr';
-    // Initialize with public key if available
-    if (EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
-      try { emailjs.init(EMAILJS_PUBLIC_KEY); } catch (e) { console.warn('EmailJS init failed'); }
+
+    // Helper to ensure EmailJS SDK is loaded (handles CDN/network issues)
+    function ensureEmailJSSDK(timeout = 8000) {
+      return new Promise((resolve, reject) => {
+        if (window.emailjs) return resolve(window.emailjs);
+        // If script tag already present, wait for it
+        const existing = document.querySelector('script[src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"]');
+        if (existing) {
+          existing.addEventListener('load', () => resolve(window.emailjs));
+          existing.addEventListener('error', () => reject(new Error('EmailJS SDK load error')));
+        } else {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.emailjs.com/sdk/3.2.0/email.min.js';
+          s.async = true;
+          s.onload = () => resolve(window.emailjs);
+          s.onerror = () => reject(new Error('EmailJS SDK load error'));
+          document.head.appendChild(s);
+        }
+        // timeout
+        setTimeout(() => {
+          if (!window.emailjs) reject(new Error('EmailJS SDK load timeout'));
+        }, timeout);
+      });
     }
+
+    // Try to initialize EmailJS SDK (non-blocking)
+    ensureEmailJSSDK().then(() => {
+      try {
+        if (EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+          emailjs.init(EMAILJS_PUBLIC_KEY);
+        }
+      } catch (e) {
+        console.warn('EmailJS init failed', e);
+      }
+    }).catch(err => {
+      console.warn('EmailJS SDK not available:', err);
+    });
 
     // Configuration
     const PASSWORD = 'love'; // Change this to your password
