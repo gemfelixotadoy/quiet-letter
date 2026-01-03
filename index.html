@@ -317,7 +317,31 @@
       margin-bottom: 0.6rem;
     }
     .message-actions { display:flex; gap:0.5rem; justify-content:flex-end; }
-    .message-actions button { padding:0.5rem 0.8rem; border-radius:6px; cursor:pointer; }
+    .message-actions button {
+      padding: 0.5rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      transition: background 160ms ease, color 160ms ease, transform 120ms ease;
+      border: none;
+      background: transparent;
+    }
+
+    /* Text-style send and close buttons (same typography) */
+    #sendMessageBtn, #closeMessageBtn {
+      color: #fff;
+      background: transparent;
+      border: none;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+    #sendMessageBtn:hover, #closeMessageBtn:hover {
+      color: rgba(255,255,255,0.95);
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
@@ -326,7 +350,7 @@
   <div class="password-screen" id="passwordScreen">
     <p class="subtitle">for you, analy ❤️</p>
     <h1 class="title">enter to read</h1>
-    <p class="hint">hint: the endearment you always call me whenever we talk.</p>
+    <p class="hint">hint: the endearment you always call me when we talk, the one that always makes me so mad, lol.”</p>
     <form id="passwordForm">
       <input 
         type="password" 
@@ -419,17 +443,26 @@
     });
 
     // Configuration
-    const PASSWORD = 'love'; // Change this to your password
+    const PASSWORD = 'dong'; // Change this to your password
     
     const sentences = [
-        "I wish things could have been different.",
-        "That we could have stayed in the little world we made for ourselves, even for a moment longer.",
-        "The time we shared during the holiday season will always remain with me.",
-        "And I hope I will always have a quiet, special place in your heart, just as you will in mine.",
-        "Even though we cannot be together, I carry every memory with me.",
-        "Saying goodbye hurts more than I can say.",
-        "But I will let you go, while a part of me will always love you quietly from afar. 🤍" 
-  ];
+      "Hello. I’m glad you came back to check.",
+      "How are you?",
+      "I’m writing this because I felt that you didn’t fully believe what I said earlier.",
+      "Maybe you just wanted to be sure that when morning comes, I’ll still be the same person you talked to.",
+      "The same person who meant every word.",
+      "So let me say it clearly, without hesitation.",
+      "Yes, it’s true.",
+      "I still love you.",
+      "I still miss you.",
+      "I thought I would be able to completely move on from you, but my heart never learned how.",
+      "I’m sorry for what I did, and for the pain I caused.",
+      "I hope that one day, you can forgive me.",
+      "I won’t drop you again.",
+      "I love you.",
+      "so bad."
+    ];
+
 
     // Elements
     const passwordScreen = document.getElementById('passwordScreen');
@@ -570,7 +603,7 @@
       try {
         // Simple reliable flow: open the visitor's mail client with a prefilled message.
         // Replace the recipient below with your real email address.
-        const recipient = 'you@example.com';
+        const recipient = 'otadoygemfelix@gmail.com';
         const subject = encodeURIComponent('Miss you message');
         const body = encodeURIComponent(`From: ${name}\n\n${message}`);
         window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
